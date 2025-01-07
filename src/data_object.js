@@ -7,31 +7,31 @@ window.DataObject = class DataObject {
 
   // Parse base csv file as JSON. This will be easier to work with.
   // It uses http://papaparse.com/ for handling parsing
-  parseCsv(csv, encoding, startAtRow=1, extraRow=false, delimiter=null) {
+  parseCsv(csv, encoding, startAtRow = 1, extraRow = false, delimiter = null) {
     let existingHeaders = [];
     let config = {
       header: true,
       skipEmptyLines: true,
-      beforeFirstChunk: function(chunk) {
+      beforeFirstChunk: function (chunk) {
         var rows = chunk.split("\n");
         var startIndex = startAtRow - 1;
         rows = rows.slice(startIndex);
 
         if (extraRow) {
-        // If first row duplication is turned on, we add the first row to the top of the set again.
+          // If first row duplication is turned on, we add the first row to the top of the set again.
           rows.unshift(rows[0]);
         }
 
         return rows.join("\n");
       },
-      transformHeader: function(header) {
+      transformHeader: function (header) {
         if (header.trim().length == 0) {
           header = "Unnamed column";
         }
         if (existingHeaders.indexOf(header) != -1) {
           let new_header = header;
           let counter = 0;
-          while(existingHeaders.indexOf(new_header) != -1){
+          while (existingHeaders.indexOf(new_header) != -1) {
             counter++;
             new_header = header + " (" + counter + ")";
           }
@@ -109,6 +109,25 @@ window.DataObject = class DataObject {
                     tmp_row[col] = cell;
                   }
                   break;
+                case "Payee":
+                  var date_reg = /\d{2}\.\d{2}\.\d{4}/;
+                  const match = date_reg.exec(cell);
+                  var right_index = match ? match.index : cell.length;
+
+                  const left_strings = ["Einkauf TWINT, ", "Einkauf "]
+
+                  for (const left_string of left_strings) {
+
+                    if (cell.startsWith(left_string)) {
+                      tmp_row[col] = cell.slice(left_string.length, right_index);
+                      break;
+                    } else {
+                      tmp_row[col] = cell;
+                    }
+
+                  }
+                  break;
+
                 default:
                   tmp_row[col] = cell;
               }
